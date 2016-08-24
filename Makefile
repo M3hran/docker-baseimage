@@ -4,7 +4,7 @@ C_NAME = baseimage
 
 .PHONY: all build test tag_latest release install clean
 
-all: build
+all: clean build install
 
 build: 
 	docker build -t $(NAME):$(VERSION) .

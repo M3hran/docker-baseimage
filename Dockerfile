@@ -1,4 +1,4 @@
-FROM phusion/baseimage:0.9.19
+FROM phusion/baseimage
 MAINTAINER Martin Taheri <m3hran@gmail.com>
 LABEL Description="Docker Base Image"
 
@@ -23,4 +23,4 @@ RUN clean_install.sh --no-install-recommends \
     htop openssh-client \
     gettext
 
-WORKDIR /z/apps
+WORKDIR /u/apps

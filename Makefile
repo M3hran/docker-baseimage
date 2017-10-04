@@ -1,5 +1,5 @@
 NAME = m3hran/baseimage
-VERSION = 0.2.0
+VERSION = 0.3.0
 C_NAME = baseimage
 
 .PHONY: all build test tag_latest release install clean

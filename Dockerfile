@@ -17,7 +17,7 @@ RUN apt-get -q update \
     && apt-get upgrade -y -o Dpkg::Options::="--force-confold"
 
 RUN clean_install.sh --no-install-recommends \
-    curl wget git \
+    curl wget git tzdata\
     zip unzip \
     nano vim \
     htop openssh-client \

@@ -1,0 +1,9 @@
+---
+services:
+  code-server:
+    image: $IMG_TITLE:$IMG_VERSION
+    container_name: $CONTAINER_NAME
+    volumes:
+      - ./$CONTAINER_NAME:/data
+    restart: unless-stopped
+

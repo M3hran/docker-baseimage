@@ -1,0 +1,67 @@
+name: Check Docker Hub Source Image
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'  # Runs every hour; adjust as needed
+env:
+  SOURCE_IMAGE="alpine:latest"
+
+jobs:
+  check-docker-image:
+    runs-on: ubuntu-latest
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the changed files back to the repository.
+      contents: write
+
+    steps:
+        # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+        # Step 2: Log in to Docker Hub (or other Docker registry)
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      # Step 3: Fetch the current digest of the source image
+      - name: Fetch source image digest
+        id: fetch_digest
+        run: |      
+          CURRENT_DIGEST=$(docker manifest inspect $SOURCE_IMAGE | jq -r '.manifests[0].digest' ) 
+          echo "CURRENT_DIGEST=$CURRENT_DIGEST" >> $GITHUB_ENV
+          echo "CURRENT DIGEST=$CURRENT_DIGEST"
+
+      # Step 4: Compare with stored digest
+      - name: Compare digests
+        id: compare_digest
+        run: |
+          DIGEST_FILE=".stored_digest"
+          if [ -f "$DIGEST_FILE" ]; then
+            STORED_DIGEST=$(cat $DIGEST_FILE)
+          else
+            STORED_DIGEST=""
+          fi
+          echo "STORED_DIGEST=$STORED_DIGEST"
+
+          if [ "$STORED_DIGEST" == "$CURRENT_DIGEST" ]; then
+            echo "No update needed."
+            echo "update_needed=false" >> $GITHUB_ENV
+          else
+            echo "Source image updated. Update needed."
+            echo "$CURRENT_DIGEST" > $DIGEST_FILE
+            echo "update_needed=true" >> $GITHUB_ENV
+          fi
+
+      # Step 5: Rebuild and push the Docker image if the source image was updated
+      - name: Rebuild and push Docker image
+        if: env.update_needed == 'true'
+        run: |
+           make build && make release
+
+      # Step 6: Commit changes
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update source image digest to $CURRENT_DIGEST"

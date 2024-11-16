@@ -1,0 +1,28 @@
+name: Notify Repo Changes
+
+on:
+  push:
+    branches:
+      - master # Trigger on changes pushed to the main branch
+  pull_request:
+    branches:
+      - master # Trigger on pull requests to the main branch
+
+jobs:
+  notify-changes:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: send notification
+      - name: Send Notification
+        run: |
+          REPO_NAME=${{ github.repository }}
+          COMMIT_MESSAGE=$(git log --format=%B -n 1)
+          echo "Sending notification due to detected changes in the repository..."
+          curl -sSL --output /dev/null -w "%{http_code}\n" -X POST \
+          "${{ secrets.GOTIFY_WEBHOOK }}" \
+           -F "title=Github Changes: $REPO_NAME" -F "message=$COMMIT_MESSAGE" -F "priority=5"
